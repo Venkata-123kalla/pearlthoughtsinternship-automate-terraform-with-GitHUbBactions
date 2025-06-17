@@ -1,0 +1,65 @@
+# .github/workflows/deploy.yml
+
+name: Build Docker & Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:  # ✅ Centralized environment variables here
+      DOCKER_IMAGE_NAME: venkatamahendrakalla/strapi-image
+      AWS_REGION: ap-south-1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # -----------------------
+    # 1. Docker Build & Push
+    # -----------------------
+    - name: Log in to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ env.DOCKERHUB_USERNAME }}
+        password: ${{ env.DOCKERHUB_TOKEN }}
+
+    - name: Build Docker Image
+      run: docker build -t $DOCKER_IMAGE_NAME:latest .
+
+    - name: Push Docker Image to Docker Hub
+      run: docker push $DOCKER_IMAGE_NAME:latest
+
+    # -----------------------
+    # 2. Terraform Automation
+    # -----------------------
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      run: terraform init
+      working-directory: terraform
+
+    - name: Terraform Format Check
+      run: terraform fmt -check
+      working-directory: terraform
+
+    - name: Terraform Validate
+      run: terraform validate
+      working-directory: terraform
+
+    - name: Terraform Plan
+      run: terraform plan 
+      working-directory: terraform
+
+    - name: Terraform Apply
+      run: terraform apply 
+      working-directory: terraform
