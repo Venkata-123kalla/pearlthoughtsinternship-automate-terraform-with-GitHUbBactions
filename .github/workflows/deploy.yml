@@ -1,4 +1,4 @@
-#cicd .github/workflows/deploy.yml
+#cicd. .github/workflows/deploy.yml
 
 name: Build Docker & Deploy Infrastructure
 
