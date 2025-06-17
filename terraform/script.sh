@@ -14,5 +14,5 @@ usermod -aG docker ubuntu
 docker pull venkatamahendrakalla/strapi-image:latest
 
 # Run Strapi container (in detached mode)
-docker run -p 1337:1337 --name cont-01 venkatamahendrakalla/strapi-image:latest
+docker run -d --name cont-01 -p 1337:1337 venkatamahendrakalla/strapi-image:latest
 
