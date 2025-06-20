@@ -1,0 +1,41 @@
+name: Build Docker & Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-destroy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-south-1
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+    - name: 🔄 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 📥 Setup Terraform CLI
+      uses: hashicorp/setup-terraform@v3
+
+    - name: 📦 Terraform Init
+      run: terraform init
+      working-directory: terraform3
+
+    - name: 🧠 Terraform Plan
+      run: terraform plan
+      working-directory: terraform3
+
+    - name: 🚀 Terraform Apply
+      run: terraform apply --auto-approve
+      working-directory: terraform3
+
+    - name: 💤 Wait for 15 Minutes
+      run: sleep 900  # 900 seconds = 15 minutes
+
+    - name: 💣 Terraform Destroy
+      run: terraform destroy --auto-approve
+      working-directory: terraform3
