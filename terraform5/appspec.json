@@ -1,0 +1,15 @@
+{
+  "applicationName": "StrapiCodeDeployApp",
+  "deploymentGroupName": "StrapiBlueGreenDeployment",
+  "deploymentConfigName": "CodeDeployDefault.ECSAllAtOnce",
+  "description": "BlueGreen Deployment to v2",
+  "revision": {
+    "revisionType": "AppSpecContent",
+    "appSpecContent": {
+      "content": "{\"version\":1,\"Resources\":[{\"TargetService\":{\"Type\":\"AWS::ECS::Service\",\"Properties\":{\"TaskDefinition\":\"arn:aws:ecs:ap-south-1:975050037267:task-definition/strapi-task:7\",\"LoadBalancerInfo\":{\"ContainerName\":\"strapi\",\"ContainerPort\":1337}}}}]}"
+    }
+  }
+}
+
+
+

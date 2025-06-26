@@ -1,41 +1,56 @@
-name: Build Docker & Deploy Infrastructure
+name: Deploy with ECS & CodeDeploy (Manual Trigger)
 
 on:
   push:
     branches:
       - master
 
+env:
+  AWS_REGION: ap-south-1
+
 jobs:
-  build-and-destroy:
+  deploy:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: ap-south-1
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
     steps:
-    - name: 🔄 Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: 📥 Setup Terraform CLI
-      uses: hashicorp/setup-terraform@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: 📦 Terraform Init
-      run: terraform init
-      working-directory: terraform3
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
 
-    - name: 🧠 Terraform Plan
-      run: terraform plan
-      working-directory: terraform3
+      - name: Terraform Init
+        working-directory: terraform5
+        run: terraform init
 
-    - name: 🚀 Terraform Apply
-      run: terraform apply --auto-approve
-      working-directory: terraform3
+      - name: Terraform Apply (Infra only)
+        working-directory: terraform5
+        run: terraform apply -auto-approve
 
-    - name: 💤 Wait for 15 Minutes
-      run: sleep 900  # 900 seconds = 15 minutes
+      - name: Register ECS Task Definition from taskdef-v2.json
+        run: |
+          aws ecs register-task-definition \
+            --cli-input-json file://terraform5/taskdef-v2.json
 
-    - name: 💣 Terraform Destroy
-      run: terraform destroy --auto-approve
-      working-directory: terraform3
+      - name: Trigger CodeDeploy using appspec.json
+        run: |
+          aws deploy create-deployment \
+            --cli-input-json file://terraform5/appspec.json
+
+      - name: Wait before destroy (20 min)
+        run: |
+          echo "⏳ Waiting 20 minutes before destroying infra..."
+          sleep 1200
+
+      - name: Terraform Destroy (Teardown)
+        working-directory: terraform5
+        run: terraform destroy -auto-approve

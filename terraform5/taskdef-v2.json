@@ -1,0 +1,26 @@
+{
+  "family": "strapi-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::975050037267:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "strapi",
+      "image": "975050037267.dkr.ecr.ap-south-1.amazonaws.com/venkatamahendra:v2",
+      "memory": 1024,
+      "cpu": 512,
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 1337,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024"
+}
+
+
+
